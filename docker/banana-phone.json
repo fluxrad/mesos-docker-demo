@@ -1,0 +1,16 @@
+{
+  "id": "banana-phone",
+  "container": {
+    "type": "DOCKER",
+    "docker": {
+      "image": "banana-phone",
+      "network": "BRIDGE",
+      "portMappings": [ 
+        { "containerPort": 80, "hostPort": 0, "servicePort": 8081, "protocol": "tcp" } 
+      ]
+    }
+  },
+  "instances": 1,
+  "cpus": 0.5,
+  "mem": 512
+}

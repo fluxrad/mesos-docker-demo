@@ -1,0 +1,78 @@
+---
+- hosts: all
+  sudo: True
+  gather_facts: False
+  tasks:
+    - name: install the ubuntu apt-key
+      apt_key: keyserver=keyserver.ubuntu.com id=E56151BF state=present
+
+    - name: install the docker apt-key
+      apt_key: keyserver=keyserver.ubuntu.com id=36A1D7869245C8950F966E92D8576A8BA88D21E9 state=present
+
+    - name: download mesosphere package list
+      apt_repository: repo='deb http://repos.mesosphere.io/ubuntu trusty main' state=present update_cache=yes
+
+    - name: download docker package list
+      apt_repository: repo='deb http://get.docker.com/ubuntu docker main' state=present update_cache=yes
+
+    - name: install packages
+      apt: name={{ item }} state=present
+      with_items:
+        - mesos
+        - marathon
+        - chronos
+        - lxc-docker
+
+    - name: install mesos zookeeper file
+      copy: src=files/zk dest=/etc/mesos/zk
+
+    - name: install zoo.cfg
+      copy: src=files/zoo.cfg dest=/etc/zookeeper/conf/zoo.cfg
+
+    - name: configure mesos-slave
+      shell: echo 'docker,mesos' > /etc/mesos-slave/containerizers
+
+    - name: configure executor timeout
+      shell: echo '5mins' > /etc/mesos-slave/executor_registration_timeout
+
+    - name: set quorum count
+      shell: echo '2' > /etc/mesos-master/quorum
+
+  handlers:
+    - name: restart mesos slave
+      service: name=mesos-slave state=restarted
+
+# Mesos1 specific tasks
+- hosts: mesos1
+  sudo: True
+  gather_facts: False
+  tasks:
+    - name: crate zookeeper id
+      shell: echo '1' > /etc/zookeeper/conf/myid
+
+    - name: restart the machine (for great zookeeper)
+      command: shutdown -r now
+      ignore_errors: True
+
+# Mesos2 specific tasks
+- hosts: mesos2
+  sudo: True
+  gather_facts: False
+  tasks:
+    - name: crate zookeeper id
+      shell: echo '2' > /etc/zookeeper/conf/myid
+    - name: restart the machine (for great zookeeper)
+      command: shutdown -r now
+      ignore_errors: True
+
+# Mesos3 specific tasks
+- hosts: mesos3
+  sudo: True
+  gather_facts: False
+  tasks:
+    - name: crate zookeeper id
+      shell: echo '3' > /etc/zookeeper/conf/myid
+
+    - name: restart the machine (for great zookeeper)
+      command: shutdown -r now
+      ignore_errors: True
